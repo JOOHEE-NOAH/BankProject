@@ -4,8 +4,9 @@ import java.util.Scanner;
 
 public class BankApp implements Bank {
 	static Scanner sc = new Scanner(System.in); //스캐너 객체생성
-	static MemberDAO md = new MemberDAO();
-	MemberDTO member;
+	static MemberDAO m = new MemberDAO(); //회원가입 및 회원리스트 조회
+	static Login login = new Login();
+	MemberDTO member; 
 	
 	
 	public static void main(String[] args) {
@@ -16,21 +17,25 @@ public class BankApp implements Bank {
 		
 		do {
 		System.out.println("-----------------------------------------------------------------------------------");
-		System.out.println("1.회원가입  |  2.출금   |  3.잔고 | 4.가입자 조회	| 5.예금| 6.로그인| 7.로그아웃 |8.종료");
+		System.out.println("1.회원가입  | 2.로그인  | 3.잔고 | 4.가입자 조회	| 5.예금| 6.로그인 | 7.출금 |8.종료");
 		System.out.println("-----------------------------------------------------------------------------------");
 		System.out.print("원하시는 번호를 선택하세요");
 		
 		int menuNum = sc.nextInt(); //선택 번호
 		switch (menuNum) {
 		case 1://회원가입
-			md.memberJoin();
+			m.memberJoin();
+			break;
+		case 2://로그인
+			login.login();
+			
 			break;
 		case 5:
 			//System.out.println("예금액>");
 			//balance += sc.nextInt();
 			app.deposit();
 			break;
-		case 2:
+		case 7:
 			//System.out.println("출금액>");
 			//balance -= sc.nextInt();
 			app.withDraw();
@@ -40,17 +45,14 @@ public class BankApp implements Bank {
 			System.out.println();
 			break;
 		case 4:
-			md.memberAll();
+			m.memberAll();
 			break;
 		
 		case 6:
 			
 			
 			break;
-		case 7:
-			
-			
-			break;
+		
 		case 8:
 			run = false;
 			break;	

@@ -9,16 +9,23 @@ public class MemberDAO {
 	Scanner sc = new Scanner(System.in);
 	List<MemberDTO> members = new ArrayList<MemberDTO>();
 	MemberDTO member;
+	
 	public MemberDAO() {
-		members.add(new MemberDTO("user1", "name1", "123", 800000, 123456789));
-		members.add(new MemberDTO("user2", "name2", "123", 200000, 123456787));
-		members.add(new MemberDTO("user3", "name3", "123", 300000, 123456786));
+		members.add(new MemberDTO("user1", "name1", "123", 800000, "1234567891234"));
+		members.add(new MemberDTO("user2", "name2", "123", 200000, "1234567891235"));
+		members.add(new MemberDTO("user3", "name3", "123", 300000, "1234567891236"));
 	}
 	
 	//회원가입
 	public void memberJoin() {
 		boolean run = true;
+		//계좌번호
 		Random 	ran = new Random();
+		int accountNo1 = ran.nextInt(9999) + 1000; //첫번째 칸 랜덤숫자
+		int accountNo2 = ran.nextInt(999) + 100; //두번째 칸 랜덤숫자
+		int accountNo3 = ran.nextInt(999999) + 100000; //셋번째 칸 랜덤숫자
+		String accountNo = Integer.toString(accountNo1) 
+							+ Integer.toString(accountNo2) + Integer.toString(accountNo3);
 		
 		System.out.print("가입하실 아이디를 입력하세요 >>");
 		String 	id = sc.next();
@@ -35,12 +42,24 @@ public class MemberDAO {
 			System.out.print("비밀번호를 한번 더 입력하세요 >>");
 			String pw2 = sc.next();
 			if(pw.equals(pw2)) {
-				members.add(new MemberDTO(id, name, pw, 0, 123 ));
-				System.out.println(id + "님 회원가입이 완료되었습니다.");
-				
+				//계좌번호가 중복하지 않을 때 까지 랜덤 계좌번호 생성
+				while (accountNoCheck(accountNo)==false) {
+					accountNo1 = ran.nextInt(9999) + 1000; //첫번째 칸 랜덤숫자
+					accountNo2 = ran.nextInt(999) + 100; //두번째 칸 랜덤숫자
+					accountNo3 = ran.nextInt(99999) + 10000; //셋번째 칸 랜덤숫자
+					accountNo = Integer.toString(accountNo1) 
+								+ Integer.toString(accountNo2) + Integer.toString(accountNo3);
+					System.out.println(accountNo);
+					System.out.println("중복됩니다 다시 생성합니다.");
+					if (accountNoCheck(accountNo)==true) { 
+					 break;	
+					}
+				}
+					members.add(new MemberDTO(id, name, pw, 0, accountNo ));
+					System.out.println(id + "님 회원가입이 완료되었습니다.");
+					System.out.printf("계좌번호는 %d-%d-%d입니다. \n",accountNo1,accountNo2,accountNo3);
+			
 				run = false;
-				// 배열에 잘 입력되었는지 전체 멤버 확인
-				
 			} else {
 				System.out.println("비밀번호 확인이 잘못되었습니다. "
 						+ "나가시려면 1을, 비밀번호 설정을 다시하시려면 아무거나 눌러주세요.");
@@ -70,6 +89,18 @@ public class MemberDAO {
 		return check;
 	}
 	
+	//계좌번호 중복 확인
+	private boolean accountNoCheck(String accountNo) {
+		boolean check = true;
+		for (int i = 0; i < members.size(); i++) {
+			if (accountNo.equals(members.get(i).getAccountNo())) {
+			check = false;
+			}
+		}
+		return check;
+		
+	}
+	
 	//전체 가입자 목록 조회
 	public void memberAll() {
 		System.out.println("---------------전체 가입자 목록 조회--------------------");
@@ -80,6 +111,8 @@ public class MemberDAO {
 			System.out.print(item.getName()+ "\t");
 			System.out.print(item.getPw()+ "\t");
 			System.out.print(item.getBalance()+ "\t");
+			System.out.println(item.getAccountNo()+ "\t");
+			System.out.println(item.getAccountNo()+ "\t");
 			System.out.println(item.getAccountNo()+ "\t");
 			System.out.println();
 		}
@@ -94,55 +127,6 @@ public class MemberDAO {
 //			
 			
 	
-//	Member[] member = new Member[3];
-//		Scanner sc = new Scanner(System.in);
-//		//2.값을 입력받아 ArrayList에 새로운 Member객체 추가
-//		System.out.print("가입하실 아이디를 입력하세요");
-//		String id = sc.next();
-//		System.out.print("이름를 입력하세요");
-//		String name = sc.next();
-//		System.out.print("비밀번호를 입력하세요");
-//		String pw = sc.next();
-//		long balance = 0; //회원가입시 잔고는 0을 디폴트로	
-//		
-//		Member memberInfo = new Member(id,name,pw,balance);
-		
-		
-//	Member memberInfo = new Member("joohee","김주희","123",800000);
-//	Member memberInfo2 = new Member("joohee2","김주희2","123",800000);
-//	arr.add(memberInfo);
-//	arr.add(memberInfo2);
-//	
-//	for(Member item:arr) {
-//		System.out.println(item.getId());
-//		System.out.println(item.getName());
-//		System.out.println(item.getPw());
-//		System.out.println(item.getBalance());
-//	}
-//	}
-	
-//	public Join(String id, String name, String pw, long balance) {
-//		Scanner sc = new Scanner(System.in);
-//	//2.값을 입력받아 ArrayList에 새로운 Member객체 추가
-////		System.out.print("가입하실 아이디를 입력하세요");
-////		id = sc.next();
-////		System.out.print("이름를 입력하세요");
-////		name = sc.next();
-////		System.out.print("비밀번호를 입력하세요");
-////		pw = sc.next();
-////		balance = 0; //회원가입시 잔고는 0을 디폴트로
-//	
-//		Member memberInfo = new Member(id,name,pw,balance);
-//		members.add(memberInfo);
-//		
-//		for(Member item:members) {
-//			System.out.println(item.getId());
-//			System.out.println(item.getName());
-//			System.out.println(item.getPw());
-//			System.out.println(item.getBalance());
-//		}
-//		//System.out.println(members);
-//		
-//	}
+
 	
 }

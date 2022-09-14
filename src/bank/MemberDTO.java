@@ -6,9 +6,9 @@ public class MemberDTO {
 	private String name;
 	private String pw;
 	private long balance;
-	private long accountNo;
+	private String accountNo;
 	
-	public MemberDTO(String id, String name, String pw, long balance, long accountNo) {
+	public MemberDTO(String id, String name, String pw, long balance, String accountNo) {
 		super();
 		this.id = id;
 		this.name = name;
@@ -38,7 +38,7 @@ public class MemberDTO {
 		return balance;
 	}
 	
-	public long getAccountNo() {
+	public String getAccountNo() {
 		return accountNo;
 	}
 	
@@ -58,7 +58,7 @@ public class MemberDTO {
 		this.balance = balance;
 	}
 	
-	public void setAccountNo(long accountNo) {
+	public void setAccountNo(String accountNo) {
 		this.accountNo = accountNo;
 	}
 	
