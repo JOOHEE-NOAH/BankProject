@@ -10,14 +10,15 @@ public class BankApp implements Bank {
 	
 	
 	public static void main(String[] args) {
-		
+		 Scanner sc = new Scanner(System.in); //스캐너 객체생성
 		BankApp app = new BankApp();
 		
 		boolean run = true;
 		
 		do {
+			m.fileOutput();
 		System.out.println("-----------------------------------------------------------------------------------");
-		System.out.println("1.회원가입  | 2.로그인  | 3.잔고 | 4.가입자 조회	| 5.예금| 6.로그인 | 7.출금 |8.종료");
+		System.out.println("1.회원가입  | 2.로그인  | 3.잔고 | 4.가입자 조회	| 5.예금| 6.로그인 | 7.출금 |8.종료 | 9.관리자");
 		System.out.println("-----------------------------------------------------------------------------------");
 		System.out.print("원하시는 번호를 선택하세요");
 		
