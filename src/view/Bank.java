@@ -1,4 +1,4 @@
-package bank;
+package view;
 
 public interface Bank {
 	
