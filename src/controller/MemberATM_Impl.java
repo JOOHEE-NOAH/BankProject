@@ -19,13 +19,16 @@ import java.util.Random;
 import java.util.Scanner;
 import java.util.StringTokenizer;
 
+import Dao.Jdbc;
 import model.Account;
 import model.Member;
+import view.MemberPage;
 
 public class MemberATM_Impl implements MemberATM {
 	Scanner sc = new Scanner(System.in);
 	LocalDate nowdate = LocalDate.now();
 	List<Member> members = new ArrayList<Member>();
+	List<Account> accounts = new ArrayList<Account>();
 	AccountATM_Impl a = new AccountATM_Impl();
 	Member member;
 	Account account;
@@ -61,7 +64,7 @@ public class MemberATM_Impl implements MemberATM {
 					PreparedStatement pstmt = null;
 					try {
 						System.out.println("member Table Insert Start...");
-						pstmt = conn.prepareStatement(insertMember());
+						pstmt = conn.prepareStatement("insert into member values(?,?,?,?,now())");
 						pstmt.setString(1, id);
 						pstmt.setString(2, name);
 						pstmt.setString(3, pw);
@@ -72,7 +75,7 @@ public class MemberATM_Impl implements MemberATM {
 						String msg = result > -1 ? "회원정보 추가성공" : "회원정보 추가실패";
 						System.out.println(msg);
 						System.out.println(id + "님 회원가입이 완료되었습니다.");
-						a.createAccount(id);
+						a.createAccount(id,accounts);
 					} catch (SQLException e) {
 						e.printStackTrace();
 					} finally {
@@ -121,29 +124,29 @@ public class MemberATM_Impl implements MemberATM {
 		}
 	}
 
-	// 회원가입시 회원정보를 파일에 차곡차곡 저장
-	private void fileInput(Member member) {
-		System.out.println("fileInputstart.....");// 확인
-		try {// 파일에 중첩해서 회원정보 저장
-			PrintWriter pw = new PrintWriter(new FileWriter(new File("BankMembers.text"), true));
-			StringBuilder sb = new StringBuilder();
-			sb.append(member.getId());
-			sb.append("#");
-			sb.append(member.getName());
-			sb.append("#");
-			sb.append(member.getPw());
-			sb.append("#");
-//			sb.append(member.getBalance());
+//	// 회원가입시 회원정보를 파일에 차곡차곡 저장
+//	private void fileInput(Member member) {
+//		System.out.println("fileInputstart.....");// 확인
+//		try {// 파일에 중첩해서 회원정보 저장
+//			PrintWriter pw = new PrintWriter(new FileWriter(new File("BankMembers.text"), true));
+//			StringBuilder sb = new StringBuilder();
+//			sb.append(member.getId());
 //			sb.append("#");
-//			sb.append(member.getAccountNo());
-			pw.println(sb.toString());
-			pw.close();
-
-		} catch (Exception e) {
-			e.printStackTrace();
-		}
-
-	}
+//			sb.append(member.getName());
+//			sb.append("#");
+//			sb.append(member.getPw());
+//			sb.append("#");
+////			sb.append(member.getBalance());
+////			sb.append("#");
+////			sb.append(member.getAccountNo());
+//			pw.println(sb.toString());
+//			pw.close();
+//
+//		} catch (Exception e) {
+//			e.printStackTrace();
+//		}
+//
+//	}
 	
 	@Override //회원의 모든 정보 가져와 리스트에 담기--select ->아이디 중복확인
 	public void saveMemberAll() {
@@ -151,7 +154,7 @@ public class MemberATM_Impl implements MemberATM {
 		PreparedStatement pstmt = null;
 		ResultSet rs = null;
 		try {
-			pstmt = conn.prepareStatement(selectMemberAll());
+			pstmt = conn.prepareStatement("Select * from member");
 			rs = pstmt.executeQuery();
 //			ResultSetMetaData rsmd = rs.getMetaData();
 //			int cols =rsmd.getColumnCount();
@@ -164,13 +167,6 @@ public class MemberATM_Impl implements MemberATM {
 				member = new Member(rs.getString(1), rs.getString(2), rs.getString(3), rs.getString(4),rs.getString(5));
 				members.add(member);
 			}
-//			for (int i = 0; i < members.size(); i++) {
-//				System.out.println(members.get(i).getId());
-//				System.out.println(members.get(i).getName());
-//				System.out.println(members.get(i).getPw());
-//				System.out.println(members.get(i).getGrade());
-//				System.out.println(members.get(i).getRdate());
-//			}
 			
 		} catch (Exception e) {
 			// TODO: handle exception
@@ -207,12 +203,6 @@ public class MemberATM_Impl implements MemberATM {
 //
 //	}
 
-	//member table의 모든 정보 가져오기
-	private String selectMemberAll() {
-		String sql = "Select * from member";
-		return sql;
-	}
-
 	// 아이디 중복 확인
 	private boolean idCheck(String id) {
 		boolean check = true;
@@ -223,14 +213,6 @@ public class MemberATM_Impl implements MemberATM {
 		}
 		return check;
 	}
-
-	
-	// 데이터베이스 테이블 member에 회원정보 insert하기
-		public static String insertMember() {
-			String sql = "insert into member values(?,?,?,?,now())";
-			return sql;
-		}
-
 	// 전체 가입자 목록 조회
 //	public void memberAll() {
 //		System.out.println("---------------전체 가입자 목록 조회--------------------");
@@ -245,8 +227,6 @@ public class MemberATM_Impl implements MemberATM {
 //			System.out.println();
 //		}
 //	}
-
-	
 
 	@Override // 회원탈퇴
 	public void memberDrop() {
@@ -290,10 +270,6 @@ public class MemberATM_Impl implements MemberATM {
 		String id = sc.next();
 		System.out.print("pw : ");
 		String pw = sc.next();
-//		for (int i = 0; i < members.size(); i++) {
-//			System.out.println("id : " + members.get(i).getId());
-//		}
-		System.out.println("내가 입력한 id -->" + id);
 		//로그인 검사
 		if (loginCheck(id,pw) == true ) { 
 			if(id == "admin"){
@@ -303,13 +279,17 @@ public class MemberATM_Impl implements MemberATM {
 				System.out.println("일반회원페이지로 이동");
 				MemberPage memberPage = new MemberPage();
 				setMemberInfo(id);
-				memberPage.memberPageView(member, members);
+				setAccountInfo(id);
+				a.setAccountInfo(id);
+				memberPage.memberPageView(member, members, account,accounts );//myPage로 넘어가기
 			}
 		}else {
 			System.out.println("아이디 또는 패스워드 오류입니다.");
 		};
 	
 	}
+
+
 
 	//로그인 아이디/비번 체크
 	private boolean loginCheck(String id, String pw) {
@@ -359,5 +339,73 @@ public class MemberATM_Impl implements MemberATM {
 		String sql = "select * from member where id = ?";
 		return sql;
 	}
+	
+	//List에 Account 객체 정보 담기 -- select
+		public void saveAccountAll() {
+			PreparedStatement pstmt = null;
+			ResultSet rs = null;
+			try {
+				pstmt = conn.prepareStatement(selectAccountAll());
+				rs = pstmt.executeQuery();
+				ResultSetMetaData rsmd = rs.getMetaData();
+				int cols =rsmd.getColumnCount();
+//				for (int i = 1; i <= cols ; i++) {
+//					System.out.print(rsmd.getColumnName(i) + "\t"); //컬럼수만큼 반복문 돌려 컬럼이름 가져오기
+//				}
+				System.out.println();
+				while (rs.next()) {
+					account = new Account(rs.getString(1), rs.getString(2), rs.getLong(3), rs.getString(4));
+					accounts.add(account);
+				}
+				
+				
+			} catch (Exception e) {
+				// TODO: handle exception
+			}finally {
+				try {
+					if (rs != null) rs.close();
+					if (pstmt != null) pstmt.close();
+				} catch (Exception e) {
+					// TODO: handle exception
+				}
+			}
+		}
+		//account table의 모든 정보 가져오기
+		private String selectAccountAll() {
+			String sql = "Select * from account";
+			return sql;
+		}
+		
+		//로그인한 아이디의 계좌정보 객체에 담아주기
+		private void setAccountInfo(String id) {
+			conn = Jdbc.getInstance().getConnection();
+			System.out.println("개인 계좌세팅을 시작합니다.");
+			PreparedStatement pstmt = null;
+			ResultSet rs = null;
+			try {
+				pstmt = conn.prepareStatement(selectAccountInfo());
+				pstmt.setString(1, id);
+				rs = pstmt.executeQuery();
+				while (rs.next()) {
+					account = new Account(rs.getString(1), rs.getString(2), rs.getLong(3), rs.getString(4));
+				}
+				System.out.println("회원계좌정보"+ account.getAccountNo());
+				
+			} catch (Exception e) {
+				// TODO: handle exception
+			}finally {
+				try {
+					if (rs != null) rs.close();
+					if (pstmt != null) pstmt.close();
+				} catch (Exception e) {
+					// TODO: handle exception
+				}
+			}
+			
+		}
+		private String selectAccountInfo() {
+			String sql = "select * from account where id = ?";
+			return sql;
+		}
 
 }

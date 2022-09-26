@@ -2,19 +2,17 @@ package view;
 
 import java.util.Scanner;
 
+import Dao.CreateTable;
 import controller.AccountATM_Impl;
-import controller.CreateTable;
 import controller.MemberATM_Impl;
 import model.Account;
 import model.Member;
 
-public class BankApp implements Bank {
+public class BankApp  {
 	static Scanner sc = new Scanner(System.in); // 스캐너 객체생성
 	static MemberATM_Impl m = new MemberATM_Impl(); // 회원가입 및 회원리스트 조회
 	static AccountATM_Impl a = new AccountATM_Impl();
-	Member member;
-	Account account;
-
+	
 	public static void main(String[] args) {
 		//Scanner sc = new Scanner(System.in); // 스캐너 객체생성
 		BankApp app = new BankApp();
@@ -26,7 +24,7 @@ public class BankApp implements Bank {
 		do {
 //			프로그램 시작과 동시에 테이블 정보를 객체에 담기
 			m.saveMemberAll(); 
-			a.saveAccountAll(); 
+			m.saveAccountAll(); 
 			//m.fileOutput();
 			System.out.println("-----------------------------------------------------------------------------------");
 			System.out.println("1.회원가입  | 2.로그인  | 3.종료");
@@ -50,28 +48,6 @@ public class BankApp implements Bank {
 			System.out.println();
 
 		} while (run);
-
-	}
-
-
-	@Override
-	public void deposit() {
-
-		// 예금액 입력하고 member객체 balance에 값 더해주기
-		System.out.println("원하시는 예금액을 입력하세요");
-		long input = sc.nextInt();
-//		member.setBalance(member.getBalance() + input);
-//		System.out.println("입금되었습니다. 잔고: " + member.getBalance());
-
-	}
-
-	@Override
-	public void withDraw() {
-		// 예금액 입력하고 member객체 balance에 값 더해주기
-		System.out.println("원하시는 출금액을 입력하세요");
-		long input = sc.nextInt();
-//		member.setBalance(member.getBalance() - input);
-//		System.out.println("출금되었습니다. 잔고: " + member.getBalance());
 
 	}
 
