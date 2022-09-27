@@ -18,7 +18,7 @@ public class CreateTable {
 							         		+ " Name varchar(50) NOT NULL,"
 							         		+ " PW varchar(50) NOT NULL,"
 							         		+ " GRADE VARCHAR(5) DEFAULT 'C',"
-							         		+ " RDATE DATE)"
+							         		+ " RDATE DATETIME DEFAULT now())"
 							         		);
          if (result < 0 ) {
             System.out.println("실행실패");
@@ -47,7 +47,7 @@ public class CreateTable {
 							           	    + " ACCOUNTNO varchar(13) PRIMARY KEY,"
 							           	    + " ID VARCHAR(50),"
 							           	    + " BALANCE int unsigned Default 0,"
-							           	    + " OADATE DATE,"
+							           	    + " OADATE DATETIME DEFAULT now(),"
 							           	    + " FOREIGN KEY(ID)"
 							           	    + " REFERENCES MEMBER(ID) ON UPDATE CASCADE) "
 							         		);

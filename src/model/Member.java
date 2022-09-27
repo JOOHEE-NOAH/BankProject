@@ -8,6 +8,21 @@ public class Member {
 	private String pw;
 	private String grade;
 	private String rdate;
+	
+	//외래변수(account 사용)
+	private String accountNo;
+	private long balance;
+	
+	//회원전체정보 조회
+	public Member(String id, String name, String grade, String rdate, String accountNo, long balance) {
+		super();
+		this.id = id;
+		this.name = name;
+		this.grade = grade;
+		this.rdate = rdate;
+		this.accountNo = accountNo;
+		this.balance = balance;
+	}
 	public Member(String id, String name, String pw, String grade2, String rdate2) {
 		super();
 		this.id = id;
@@ -45,6 +60,18 @@ public class Member {
 	}
 	public void setRdate(String rdate) {
 		this.rdate = rdate;
+	}
+	public String getAccountNo() {
+		return accountNo;
+	}
+	public Long getBalance() {
+		return balance;
+	}
+	public void setAccountNo(String accountNo) {
+		this.accountNo = accountNo;
+	}
+	public void setBalance(Long balance) {
+		this.balance = balance;
 	}
 	@Override
 	public String toString() {

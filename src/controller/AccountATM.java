@@ -5,7 +5,7 @@ import java.util.List;
 import model.Account;
 
 public interface AccountATM {
-	void createAccount(String id, List<Account> accounts);
+	void createAccount(String id);
 	void setAccountInfo(String id);
 	void viewBalance(String id);
 	void deposit(String id);

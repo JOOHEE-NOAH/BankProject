@@ -14,6 +14,7 @@ import java.sql.SQLException;
 import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
+import java.util.Iterator;
 import java.util.List;
 import java.util.Random;
 import java.util.Scanner;
@@ -22,6 +23,7 @@ import java.util.StringTokenizer;
 import Dao.Jdbc;
 import model.Account;
 import model.Member;
+import view.AdminPage;
 import view.MemberPage;
 
 public class MemberATM_Impl implements MemberATM {
@@ -30,26 +32,24 @@ public class MemberATM_Impl implements MemberATM {
 	List<Member> members = new ArrayList<Member>();
 	List<Account> accounts = new ArrayList<Account>();
 	AccountATM_Impl a = new AccountATM_Impl();
-	Member member;
 	Account account;
+	Member member;
 	Connection conn;
-	
-	
+
 	// 회원가입
 	public void memberJoin() {
-		//conn= Jdbc.getInstance().getConnection();
+		member = null;
 		conn = Jdbc.getInstance().getConnection();
-		boolean run = true;
-		//회원가입일
-		//String rdate = nowdate.format(DateTimeFormatter.ofPattern("yyyy년mm월dd일"));
-		//회원가입시 기본 등급
-		String grade = "C";
+		String grade = "C";// 회원가입시 기본 등급(C) 설정
 		System.out.print("가입하실 아이디를 입력하세요 >>");
 		String id = sc.next();
+		boolean run = true;
 
 		// 아이디 중복검사
-		if (idCheck(id) == false) {
+		Member member = existMember(id);
+		if (member != null) { // 아이디 중복됨
 			System.out.println("이미 존재하는 ID입니다.");
+			System.out.println("중복되는 아이디 이름" + member.getId());
 		} else {// 아이디 중복검사 통과 + 비밀번호 일치 시 회원가입 완료
 			System.out.print("이름를 입력하세요 >>");
 			String name = sc.next();
@@ -59,40 +59,31 @@ public class MemberATM_Impl implements MemberATM {
 				System.out.print("비밀번호를 한번 더 입력하세요 >>");
 				String pw2 = sc.next();
 				if (pw.equals(pw2)) {
-					
+
 					// 데이터베이스 테이블 member에 추가하기
 					PreparedStatement pstmt = null;
 					try {
-						System.out.println("member Table Insert Start...");
 						pstmt = conn.prepareStatement("insert into member values(?,?,?,?,now())");
 						pstmt.setString(1, id);
 						pstmt.setString(2, name);
 						pstmt.setString(3, pw);
 						pstmt.setString(4, grade);
 						int result = pstmt.executeUpdate();
-						System.out.println("result -> " + result);
-					
-						String msg = result > -1 ? "회원정보 추가성공" : "회원정보 추가실패";
+						String msg = result > -1 ? id + "님 회원가입이 완료되었습니다." : "회원정보 추가실패";
 						System.out.println(msg);
-						System.out.println(id + "님 회원가입이 완료되었습니다.");
-						a.createAccount(id,accounts);
+						//회원가입과 동시에 자동계좌생성
+						a.createAccount(id);
 					} catch (SQLException e) {
 						e.printStackTrace();
 					} finally {
 						try {
 							if (pstmt != null)
 								pstmt.close();
-//							if (conn != null) conn.close();
 						} catch (SQLException e) {
-							// TODO: handle exception
+							e.printStackTrace();
 						}
-					} // db insert 기능 끝
-					System.out.println(id + "님 회원가입이 완료되었습니다.");
-					//비밀번호 확인까지 끝나면 기본계좌 자동생성
-					
-					
-					
-					
+					}
+
 //					// members.add(new MemberDTO(id, name, pw, 0, accountNo )); 원래라면 객체를 담는 List에
 //					// 저장하지만, 이를 파일에 바로 저장해 나중에 이 파일로 List 생성할것.
 //					member = new MemberDTO(id, name, pw, grade,rdate);
@@ -105,11 +96,9 @@ public class MemberATM_Impl implements MemberATM {
 //						System.out.println(members.get(i).toString());
 //					}
 
-
 					run = false;
 				} else {
-					System.out.println("비밀번호 확인이 잘못되었습니다. " 
-									+ "나가시려면 1을, 비밀번호 설정을 다시하시려면 아무거나 눌러주세요.");
+					System.out.println("비밀번호 확인이 잘못되었습니다. " + "나가시려면 1을, 비밀번호 설정을 다시하시려면 아무거나 눌러주세요.");
 					String menuNum = sc.next();
 					switch (menuNum) {
 					case "1":
@@ -147,91 +136,11 @@ public class MemberATM_Impl implements MemberATM {
 //		}
 //
 //	}
-	
-	@Override //회원의 모든 정보 가져와 리스트에 담기--select ->아이디 중복확인
-	public void saveMemberAll() {
-		conn = Jdbc.getInstance().getConnection();
-		PreparedStatement pstmt = null;
-		ResultSet rs = null;
-		try {
-			pstmt = conn.prepareStatement("Select * from member");
-			rs = pstmt.executeQuery();
-//			ResultSetMetaData rsmd = rs.getMetaData();
-//			int cols =rsmd.getColumnCount();
-//			for (int i = 1; i <= cols ; i++) {
-//				System.out.print(rsmd.getColumnName(i) + "\t"); //컬럼수만큼 반복문 돌려 컬럼이름 가져오기
-//			}
-//			System.out.println();
-//			members = new ArrayList<MemberDTO>();
-			while (rs.next()) {
-				member = new Member(rs.getString(1), rs.getString(2), rs.getString(3), rs.getString(4),rs.getString(5));
-				members.add(member);
-			}
-			
-		} catch (Exception e) {
-			// TODO: handle exception
-		}finally {
-			try {
-			//	if (rs != null) rs.close();
-				if (pstmt != null) pstmt.close();
-			} catch (Exception e) {
-				// TODO: handle exception
-			}
-		}
-	}
-	
-//
-//	// 파일에 저장되어 있는 정보 꺼내 List에 저장
-//	public void fileOutput() {
-//		System.out.println("fileOutputStart....");
-//		try {
-//			BufferedReader br = new BufferedReader(new FileReader(new File("BankMembers.text")));
-//			while (br.ready()) {
-//				StringTokenizer st = new StringTokenizer(br.readLine(), "#");// #을 기준으로 분리
-//				String id = st.nextToken();
-//				String name = st.nextToken();
-//				String pw = st.nextToken();
-//				String grade = st.nextToken();
-//				String rdate = st.nextToken();
-//
-//				members.add(new MemberDTO(id, name, pw, grade, rdate));
-//			}
-//		} catch (IOException e) {
-//			// TODO Auto-generated catch block
-//			e.printStackTrace();
-//		}
-//
-//	}
-
-	// 아이디 중복 확인
-	private boolean idCheck(String id) {
-		boolean check = true;
-		for (int i = 0; i < members.size(); i++) {
-			if (id.equals(members.get(i).getId())) {
-				check = false;
-			}
-		}
-		return check;
-	}
-	// 전체 가입자 목록 조회
-//	public void memberAll() {
-//		System.out.println("---------------전체 가입자 목록 조회--------------------");
-//		System.out.println("아이디\t이름\t비번\t등급\t회원가입일");
-////		fileOutput();
-//		for (MemberDTO item : members) {
-//			System.out.print(item.getId() + "\t");
-//			System.out.print(item.getName() + "\t");
-//			System.out.print(item.getPw() + "\t");
-//			System.out.print(item.getGrade() + "\t");
-//			System.out.print(item.getRdate() + "\t");
-//			System.out.println();
-//		}
-//	}
 
 	@Override // 회원탈퇴
 	public void memberDrop(String id) {
 		System.out.println("회원탈퇴를 시작합니다.");
-		conn= Jdbc.getInstance().getConnection();
+		conn = Jdbc.getInstance().getConnection();
 		PreparedStatement pstmt = null;
 		System.out.println("비밀번호를 입력하세요 : ");
 		String pw = sc.next();
@@ -248,258 +157,422 @@ public class MemberATM_Impl implements MemberATM {
 			try {
 				if (pstmt != null)
 					pstmt.close();
-//				if (conn != null) conn.close();
 			} catch (SQLException e) {
-				// TODO: handle exception
+				e.printStackTrace();
 			}
 		}
 
 	}
-
-	//로그인
+	
+	// 로그인
 	public void login() {
 		System.out.println("id와 pw를 입력하세요");
 		System.out.print("id : ");
 		String id = sc.next();
 		System.out.print("pw : ");
 		String pw = sc.next();
-		//로그인 검사
-		if (loginCheck(id,pw) == true ) { 
-			if(id == "admin"){
-				System.out.println("관리자페이지로 이동합니다.");
-			
-			}else {
-				System.out.println("일반회원페이지로 이동");
+		// 로그인 검사
+		Member member = loginCheck(id, pw);
+		if (member != null) {
+			if (id.equals("admin")) {
+				AdminPage adminPage = new AdminPage();
+				adminPage.adminPageView();
+			} else {
 				MemberPage memberPage = new MemberPage();
-				setMemberInfo(id);
-				setAccountInfo(id);
-				a.setAccountInfo(id);
-				memberPage.memberPageView(member, members, account,accounts );//myPage로 넘어가기
+//				setMemberInfo(id);
+//				setAccountInfo(id);
+//				a.setAccountInfo(id);
+				memberPage.memberPageView(id);// myPage로 넘어가기
 			}
-		}else {
+		} else {
 			System.out.println("아이디 또는 패스워드 오류입니다.");
-		};
-	
+		}
+		;
+
 	}
 
-
-
-	//로그인 아이디/비번 체크
-	private boolean loginCheck(String id, String pw) {
-		boolean check = false;
-			for (int i = 0; i < members.size(); i++) {
-				if (id.equals(members.get(i).getId())) {
-					if(pw.equals(members.get(i).getPw())) { //가져온 인덱스번호로 pw 일치여부 확인
-						check = true;
-						return check;
-					} 
-				}
-			}
-		return check;
-	}
-	
-	//로그인한 아이디로 리스트 검색해 멤버객체에 값 넣기
-	public void setMemberInfo(String id) {
+	// 로그인 아이디/비번 체크
+	private Member loginCheck(String id, String pw) {
+		System.out.println("로그인 검사 시작");
+		System.out.println("아이디=" + id);
 		conn = Jdbc.getInstance().getConnection();
-		System.out.println("세팅을 시작합니다.");
 		PreparedStatement pstmt = null;
 		ResultSet rs = null;
 		try {
+			pstmt = conn.prepareStatement("select * from member where id = ? and pw = ?");
+			pstmt.setString(1, id);
+			pstmt.setString(2, pw);
+			rs = pstmt.executeQuery();
+			while (rs.next()) {
+				member = new Member(rs.getString(1), rs.getString(2), rs.getString(3), rs.getString(4),
+						rs.getString(5));
+			}
+		} catch (Exception e) {
+			e.printStackTrace();
+		} finally {
+			try {
+				if (rs != null)
+					rs.close();
+				if (pstmt != null)
+					pstmt.close();
+			} catch (Exception e) {
+				e.printStackTrace();
+			}
+		}
+		return member;
+	}
+
+	// 회원 존재확인(중복확인) 및 입력한 id정보 Member객체 담기
+	public Member existMember(String id) {
+		conn = Jdbc.getInstance().getConnection();
+		PreparedStatement pstmt = null;
+		ResultSet rs = null;
+		System.out.println("가입하려는 id="+id);
+		try {
 			pstmt = conn.prepareStatement("select * from member where id = ?");
-			System.out.println("a");
-			System.out.println("b");
 			pstmt.setString(1, id);
 			rs = pstmt.executeQuery();
 			while (rs.next()) {
-				member = new Member(rs.getString(1), rs.getString(2), rs.getString(3), rs.getString(4),rs.getString(5));
+				member = new Member(rs.getString(1), rs.getString(2), rs.getString(3), rs.getString(4),
+						rs.getString(5));
 			}
-			System.out.println("회원정보"+ member.getId());
-			
 		} catch (Exception e) {
-			// TODO: handle exception
+			e.printStackTrace();
+		} finally {
+			try {
+				if (rs != null)
+					rs.close();
+				if (pstmt != null)
+					pstmt.close();
+			} catch (Exception e) {
+				e.printStackTrace();
+			}
+		}
+		return member;
+
+	}
+
+	// Member정보 List 저장
+	@Override
+	public void saveMemberAll() {
+		conn = Jdbc.getInstance().getConnection();
+		PreparedStatement pstmt = null;
+		ResultSet rs = null;
+		try {
+			pstmt = conn.prepareStatement("Select * from member");
+			rs = pstmt.executeQuery();
+			while (rs.next()) {
+				member = new Member(rs.getString(1), rs.getString(2), rs.getString(3), rs.getString(4),
+						rs.getString(5));
+				members.add(member);
+			}
+//			for (int i = 0; i < members.size(); i++) {
+//				System.out.println(members.get(i).getId());
+//			}
+
+		} catch (Exception e) {
+			e.printStackTrace();
+		} finally {
+			try {
+				if (rs != null)
+					rs.close();
+				if (pstmt != null)
+					pstmt.close();
+			} catch (Exception e) {
+				e.printStackTrace();
+			}
+		}
+	}
+	//Account정보 List 저장
+	public void saveAccountAll() {
+		conn = Jdbc.getInstance().getConnection();
+		PreparedStatement pstmt = null;
+		ResultSet rs = null;
+		try {
+			pstmt = conn.prepareStatement("Select * from account");
+			rs = pstmt.executeQuery();
+			while (rs.next()) {
+				account = new Account(rs.getString(1), rs.getString(2), rs.getLong(3), rs.getString(4));
+				accounts.add(account);
+			}
+//			for (int i = 0; i < accounts.size(); i++) {
+//				System.out.println(accounts.get(i).getId());
+//			}
+		} catch (Exception e) {
+			e.printStackTrace();
 		}finally {
 			try {
 				if (rs != null) rs.close();
 				if (pstmt != null) pstmt.close();
 			} catch (Exception e) {
-				// TODO: handle exception
+				e.printStackTrace();
 			}
 		}
+	}
+	// 전체 사용자 정보 조회
+	public void memberInfoAllforAdmin() {
+		//전체 조회 전 등급 업데이트
+		updateGradeVip();
+		updateGradeA();
+		updateGradeB();
+		updateGradeC();
 		
+		conn = Jdbc.getInstance().getConnection();
+		PreparedStatement pstmt = null;
+		ResultSet rs = null;
+		try {
+			pstmt = conn.prepareStatement("select  rdate, m.id, name, accountno, balance, grade\r\n"
+					+ "from member m\r\n"
+					+ "inner join account a\r\n"
+					+ "on m.id = a.id\r\n"
+					+ "and m.id != 'admin'");
+			rs = pstmt.executeQuery();
+			while (rs.next()) {
+				member = new Member(rs.getString(2), rs.getString(3), rs.getString(6), rs.getString(1), rs.getString(4), rs.getLong(5));
+				members.add(member);
+				
+				
+			}
+			if (members.size() != 0) {
+
+				System.out.println("-----------------------------------------------------------------------------------");
+				System.out.println("가입일\t\t아이디\t\t이름\t\t계좌번호\t\t등급\t\t잔액\t");
+				System.out.println("-----------------------------------------------------------------------------------");
+				for (int i = 0; i < members.size(); i++) {
+					System.out.println(members.get(i).getRdate() + "\t" + members.get(i).getId() + "\t\t"
+							+ members.get(i).getName() + "\t\t" + members.get(i).getAccountNo() + "\t"
+							+ members.get(i).getGrade() + "\t\t" + members.get(i).getBalance() + "\t");
+				}
+			}
+
+		} catch (Exception e) {
+			e.printStackTrace();
+		}finally {
+			try {
+				if (rs != null) rs.close();
+				if (pstmt != null) pstmt.close();
+			} catch (Exception e) {
+				e.printStackTrace();
+			}
+		}
+
+		
+
+	}
+	
+	//등급별 회원 수 조회
+	public void gradeCount() {
+		System.out.println("등급별 회원수를 조회합니다.");
+		boolean run = true;
+		String grade = null;
+		do {
+			System.out.println("------------------");
+			System.out.println("1.VIP 2.A 3.B 4.C 5.뒤로가기 ");
+			System.out.println("------------------");
+			System.out.print("원하시는 번호를 선택하세요");
+			int pickNum = sc.nextInt(); // 선택 번호
+			switch (pickNum) {
+			case 1://VIP선택
+				grade = "VIP";
+				updateGradeVip();
+				break;
+			case 2://A선택
+				grade = "A";
+				updateGradeA();
+				break;
+			case 3://B선택
+				grade = "B";
+				updateGradeB();
+				break;
+			case 4://C선택
+				grade = "C";
+				updateGradeC();
+				break;
+			case 5: //뒤로가기
+				grade = null;
+				run = false;
+				break;
+			default:
+				System.out.println("Wrong Answer");
+				break;
+			}
+			if (grade != null) {
+				selectGradeCount(grade);
+			}
+			
+		} while (run);
+
+	}
+	
+	//등급별 회원 수 조회
+	public void selectGradeCount(String grade) {
+		System.out.println("넘어온 grade 값"+ grade);
+		conn = Jdbc.getInstance().getConnection();
+		PreparedStatement pstmt = null;
+		ResultSet rs = null;
+		int gradeCount = 0;
+		try {
+			pstmt = conn.prepareStatement("SELECT grade, COUNT(*) FROM member\r\n"
+										+ " GROUP BY grade\r\n"
+										+ " having grade = ?");
+			pstmt.setString(1, grade);
+			rs = pstmt.executeQuery();
+			while (rs.next()) {
+				gradeCount = rs.getInt(2);
+			}
+				
+		} catch (Exception e) {
+			e.printStackTrace();
+		}finally {
+			try {
+				if (rs != null) rs.close();
+				if (pstmt != null) pstmt.close();
+			} catch (Exception e) {
+				e.printStackTrace();
+			}
+		}
+		System.out.println("--------------"+grade+"등급 회원수------------------");
+		System.out.println(grade + " : " + gradeCount +"명");
 	}
 
+	// 등급별 회원 조회 시 VIP 등급으로 업데이트하는 메소드(잔고기준 상위 0~10%)
+	@Override
+	public void updateGradeVip() {
+		System.out.println("Vip등급 먹이기 시작");
+		conn = Jdbc.getInstance().getConnection();
+		PreparedStatement pstmt = null;
+		try {
+			pstmt = conn.prepareStatement("update member m, account a set m.grade = 'VIP'\r\n"
+					+ "where m.id = a.id\r\n"
+					+ "and m.id in (SELECT a.id\r\n"
+					+ "FROM (SELECT account.id, PERCENT_RANK() OVER (ORDER BY account.balance DESC) as per_rank FROM account) a\r\n"
+					+ "WHERE a.per_rank <= 0.1)");
+			int result = pstmt.executeUpdate();
+			String msg = result > -1 ? "회원등급 자동업데이트완료" : "등급 변경 실패";
+			System.out.println(msg);
 
-	
-	//List에 Account 객체 정보 담기 -- select
-		public void saveAccountAll() {
-			PreparedStatement pstmt = null;
-			ResultSet rs = null;
+		} catch (SQLException e) {
+			e.printStackTrace();
+		} finally {
 			try {
-				pstmt = conn.prepareStatement("Select * from account");
-				rs = pstmt.executeQuery();
-				ResultSetMetaData rsmd = rs.getMetaData();
-				int cols =rsmd.getColumnCount();
-//				for (int i = 1; i <= cols ; i++) {
-//					System.out.print(rsmd.getColumnName(i) + "\t"); //컬럼수만큼 반복문 돌려 컬럼이름 가져오기
+				if (pstmt != null)
+					pstmt.close();
+			} catch (SQLException e) {
+				e.printStackTrace();
+			}
+		}
+	}
+
+	// 등급별 회원 조회 시 A 등급으로 업데이트하는 메소드(잔고기준 상위 10~20%)
+	@Override
+	public void updateGradeA() {
+		System.out.println("A등급 먹이기 시작");
+		conn = Jdbc.getInstance().getConnection();
+		PreparedStatement pstmt = null;
+		try {
+
+			pstmt = conn.prepareStatement("update member m, account a set m.grade = 'A'\r\n"
+					+ "where m.id = a.id\r\n"
+					+ "and m.id in (SELECT a.id\r\n"
+					+ "FROM (SELECT account.id, PERCENT_RANK() OVER (ORDER BY account.balance DESC) as per_rank FROM account) a\r\n"
+					+ "WHERE a.per_rank > 0.1 and a.per_rank <=0.3)");
+			int result = pstmt.executeUpdate();
+			String msg = result > -1 ? "회원등급 자동업데이트완료" : "등급 변경 실패";
+			System.out.println(msg);
+
+		} catch (SQLException e) {
+			e.printStackTrace();
+		} finally {
+			try {
+				if (pstmt != null)
+					pstmt.close();
+			} catch (SQLException e) {
+				e.printStackTrace();
+			}
+		}
+
+	}
+
+	// 등급별 회원 조회 시 B 등급으로 업데이트하는 메소드(잔고기준 상위 20~30%)
+	@Override
+	public void updateGradeB() {
+		System.out.println("C등급 먹이기 시작");
+		conn = Jdbc.getInstance().getConnection();
+		PreparedStatement pstmt = null;
+		try {
+			pstmt = conn.prepareStatement("update member m, account a set m.grade = 'B'\r\n"
+					+ "where m.id = a.id\r\n"
+					+ "and m.id in (SELECT a.id\r\n"
+					+ "FROM (SELECT account.id, PERCENT_RANK() OVER (ORDER BY account.balance DESC) as per_rank FROM account) a\r\n"
+					+ "WHERE a.per_rank > 0.3 and a.per_rank <=0.5)");
+			int result = pstmt.executeUpdate();
+			String msg = result > -1 ? "회원등급 자동업데이트완료" : "등급 변경 실패";
+			System.out.println(msg);
+
+		} catch (SQLException e) {
+			e.printStackTrace();
+		} finally {
+			try {
+				if (pstmt != null)
+					pstmt.close();
+			} catch (SQLException e) {
+				e.printStackTrace();
+			}
+		}
+
+	}
+
+	// 등급별 회원 조회 시 C 등급으로 업데이트하는 메소드(잔고기준 상위 30%~100%)
+	@Override
+	public void updateGradeC() {
+		System.out.println("C등급 먹이기 시작");
+		conn = Jdbc.getInstance().getConnection();
+		PreparedStatement pstmt = null;
+		try {
+			pstmt = conn.prepareStatement("update member m, account a set m.grade = 'C'\r\n"
+					+ "where m.id = a.id\r\n"
+					+ "and m.id in (SELECT a.id\r\n"
+					+ "FROM (SELECT account.id, PERCENT_RANK() OVER (ORDER BY account.balance DESC) as per_rank FROM account) a\r\n"
+					+ "WHERE a.per_rank > 0.5)");
+			int result = pstmt.executeUpdate();
+			String msg = result > -1 ? "회원등급 자동업데이트완료" : "등급 변경 실패";
+			System.out.println(msg);
+
+		} catch (SQLException e) {
+			e.printStackTrace();
+		} finally {
+			try {
+				if (pstmt != null)
+					pstmt.close();
+			} catch (SQLException e) {
+				e.printStackTrace();
+			}
+		}
+
+	}
+	//
+//		// 파일에 저장되어 있는 정보 꺼내 List에 저장
+//		public void fileOutput() {
+//			System.out.println("fileOutputStart....");
+//			try {
+//				BufferedReader br = new BufferedReader(new FileReader(new File("BankMembers.text")));
+//				while (br.ready()) {
+//					StringTokenizer st = new StringTokenizer(br.readLine(), "#");// #을 기준으로 분리
+//					String id = st.nextToken();
+//					String name = st.nextToken();
+//					String pw = st.nextToken();
+//					String grade = st.nextToken();
+//					String rdate = st.nextToken();
+	//
+//					members.add(new MemberDTO(id, name, pw, grade, rdate));
 //				}
-				System.out.println();
-				while (rs.next()) {
-					account = new Account(rs.getString(1), rs.getString(2), rs.getLong(3), rs.getString(4));
-					accounts.add(account);
-				}
-				
-				
-			} catch (Exception e) {
-				// TODO: handle exception
-			}finally {
-				try {
-					if (rs != null) rs.close();
-					if (pstmt != null) pstmt.close();
-				} catch (Exception e) {
-					// TODO: handle exception
-				}
-			}
-		}
-		
-		
-		//로그인한 아이디의 계좌정보 객체에 담아주기
-		private void setAccountInfo(String id) {
-			conn = Jdbc.getInstance().getConnection();
-			System.out.println("개인 계좌세팅을 시작합니다.");
-			PreparedStatement pstmt = null;
-			ResultSet rs = null;
-			try {
-				pstmt = conn.prepareStatement("select * from account where id = ?");
-				pstmt.setString(1, id);
-				rs = pstmt.executeQuery();
-				while (rs.next()) {
-					account = new Account(rs.getString(1), rs.getString(2), rs.getLong(3), rs.getString(4));
-				}
-				System.out.println("회원계좌정보"+ account.getAccountNo());
-				
-			} catch (Exception e) {
-				// TODO: handle exception
-			}finally {
-				try {
-					if (rs != null) rs.close();
-					if (pstmt != null) pstmt.close();
-				} catch (Exception e) {
-					// TODO: handle exception
-				}
-			}
-			
-		}
+//			} catch (IOException e) {
+//				// TODO Auto-generated catch block
+//				e.printStackTrace();
+//			}
+	//
+//		}
 
-		//등급별 회원 조회 시 VIP 등급으로 업데이트하는 메소드(잔고기준 상위 0~10%)
-		@Override
-		public void updateGradeVip() {
-			conn = Jdbc.getInstance().getConnection();
-			PreparedStatement pstmt = null;
-			try {
-				pstmt = conn.prepareStatement("update member m, account a set m.grade = 'VIP' "
-						+ "where m.id = a.id "
-						+ "and m.id in (SELECT a.id FROM (SELECT a.id, "
-						+ "PERCENT_RANK() OVER (ORDER BY account.balance DESC) as rankpercent FROM account) b "
-						+ "WHERE b.rankpercent <= 0.1)");
-				int result = pstmt.executeUpdate();
-				String msg = result > -1 ?  "회원등급 자동업데이트완료" : "등급 변경 실패";
-				System.out.println(msg);
-				
-			} catch (SQLException e) {
-				e.printStackTrace();
-			} finally {
-				try {
-					if (pstmt != null)
-						pstmt.close();
-				} catch (SQLException e) {
-					e.printStackTrace();
-				}
-			}
-		}
 
-		//등급별 회원 조회 시 A 등급으로 업데이트하는 메소드(잔고기준 상위 10~20%)
-		@Override
-		public void updateGradeA() {
-			conn = Jdbc.getInstance().getConnection();
-			PreparedStatement pstmt = null;
-			try {
-				
-				pstmt = conn.prepareStatement("update member m, account a set m.grade = 'A' "
-						+ "where m.id = a.id "
-						+ "and m.id in (SELECT a.id FROM (SELECT a.id, "
-						+ "PERCENT_RANK() OVER (ORDER BY account.balance DESC) as rankpercent FROM account) b "
-						+ "WHERE b.rankpercent >0.1 and b.rankpercent <= 0.2  )");
-				int result = pstmt.executeUpdate();
-				String msg = result > -1 ?  "회원등급 자동업데이트완료" : "등급 변경 실패";
-				System.out.println(msg);
-				
-			} catch (SQLException e) {
-				e.printStackTrace();
-			} finally {
-				try {
-					if (pstmt != null)
-						pstmt.close();
-				} catch (SQLException e) {
-					e.printStackTrace();
-				}
-			}
-			
-		}
-
-		//등급별 회원 조회 시 B 등급으로 업데이트하는 메소드(잔고기준 상위 20~30%)
-		@Override
-		public void updateGradeB() {
-			conn = Jdbc.getInstance().getConnection();
-			PreparedStatement pstmt = null;
-			try {
-				pstmt = conn.prepareStatement("update member m, account a set m.grade = 'B' "
-						+ "where m.id = a.id "
-						+ "and m.id in (SELECT a.id FROM (SELECT a.id, "
-						+ "PERCENT_RANK() OVER (ORDER BY account.balance DESC) as rankpercent FROM account) b "
-						+ "WHERE b.rankpercent > 0.2 and b.rankpercent <= 0.3)");
-				int result = pstmt.executeUpdate();
-				String msg = result > -1 ?  "회원등급 자동업데이트완료" : "등급 변경 실패";
-				System.out.println(msg);
-				
-			} catch (SQLException e) {
-				e.printStackTrace();
-			} finally {
-				try {
-					if (pstmt != null)
-						pstmt.close();
-				} catch (SQLException e) {
-					e.printStackTrace();
-				}
-			}
-			
-		}
-		//등급별 회원 조회 시 C 등급으로 업데이트하는 메소드(잔고기준 상위 30%~100%)
-		@Override
-		public void updateGradeC() {
-			conn = Jdbc.getInstance().getConnection();
-			PreparedStatement pstmt = null;
-			try {
-				pstmt = conn.prepareStatement("update member m, account a set m.grade = 'C' "
-						+ "where m.id = a.id "
-						+ "and m.id in (SELECT a.id FROM (SELECT a.id, "
-						+ "PERCENT_RANK() OVER (ORDER BY account.balance DESC) as rankpercent FROM account) b "
-						+ "WHERE b.rankpercent > 0.3)");
-				int result = pstmt.executeUpdate();
-				String msg = result > -1 ?  "회원등급 자동업데이트완료" : "등급 변경 실패";
-				System.out.println(msg);
-				
-			} catch (SQLException e) {
-				e.printStackTrace();
-			} finally {
-				try {
-					if (pstmt != null)
-						pstmt.close();
-				} catch (SQLException e) {
-					e.printStackTrace();
-				}
-			}
-			
-		}
-		
 
 }

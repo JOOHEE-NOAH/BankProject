@@ -23,8 +23,8 @@ public class BankApp  {
 
 		do {
 //			프로그램 시작과 동시에 테이블 정보를 객체에 담기
-			m.saveMemberAll(); 
-			m.saveAccountAll(); 
+	//		m.saveMemberAll(); 
+//			m.saveAccountAll(); 
 			//m.fileOutput();
 			System.out.println("-----------------------------------------------------------------------------------");
 			System.out.println("1.회원가입  | 2.로그인  | 3.종료");

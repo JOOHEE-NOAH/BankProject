@@ -1,13 +1,15 @@
 package controller;
 
+import model.Member;
+
 public interface MemberATM {
 	public void memberJoin(); //회원가입
-
-	public void saveMemberAll(); //DB에서 회원정보 가져와서 ArrayList에 담기
-
+	
 	public void login();// 로그인
 	
-	public void setMemberInfo(String id); //해당 id 에 대한 회원정보 객체 저장
+	public void saveMemberAll(); //DB에서 회원정보 가져와서 ArrayList에 담기
+	
+	public Member existMember(String id); //해당 id 에 대한 회원정보 객체 저장
 
 	public void memberDrop(String id);//회원탈퇴
 	
