@@ -12,4 +12,5 @@ public interface AccountATM {
 	void withdraw(String id);
 	void send(String id);
 	Account existAccount(String accountNo);
+	
 }

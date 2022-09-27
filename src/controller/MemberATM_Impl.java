@@ -229,16 +229,14 @@ public class MemberATM_Impl implements MemberATM {
 //	}
 
 	@Override // 회원탈퇴
-	public void memberDrop() {
+	public void memberDrop(String id) {
 		System.out.println("회원탈퇴를 시작합니다.");
 		conn= Jdbc.getInstance().getConnection();
 		PreparedStatement pstmt = null;
-		System.out.print("id를 입력하세요 : ");
-		String id = sc.next();
 		System.out.println("비밀번호를 입력하세요 : ");
 		String pw = sc.next();
 		try {
-			pstmt = conn.prepareStatement(delete());
+			pstmt = conn.prepareStatement("Delete From member Where id = ? and pw =?");
 			pstmt.setString(1, id); // 첫번째 물음표는 id로 설정
 			pstmt.setString(2, pw);
 			int result = pstmt.executeUpdate();
@@ -258,11 +256,6 @@ public class MemberATM_Impl implements MemberATM {
 
 	}
 
-	// 데이터베이스 테이블 member에 회원 삭제하기
-	public static String delete() {
-		String sql = "Delete From member Where id = ? and pw =?";
-		return sql;
-	}
 	//로그인
 	public void login() {
 		System.out.println("id와 pw를 입력하세요");
@@ -312,7 +305,7 @@ public class MemberATM_Impl implements MemberATM {
 		PreparedStatement pstmt = null;
 		ResultSet rs = null;
 		try {
-			pstmt = conn.prepareStatement(selectMemberInfo());
+			pstmt = conn.prepareStatement("select * from member where id = ?");
 			System.out.println("a");
 			System.out.println("b");
 			pstmt.setString(1, id);
@@ -335,17 +328,14 @@ public class MemberATM_Impl implements MemberATM {
 		
 	}
 
-	private String selectMemberInfo() {
-		String sql = "select * from member where id = ?";
-		return sql;
-	}
+
 	
 	//List에 Account 객체 정보 담기 -- select
 		public void saveAccountAll() {
 			PreparedStatement pstmt = null;
 			ResultSet rs = null;
 			try {
-				pstmt = conn.prepareStatement(selectAccountAll());
+				pstmt = conn.prepareStatement("Select * from account");
 				rs = pstmt.executeQuery();
 				ResultSetMetaData rsmd = rs.getMetaData();
 				int cols =rsmd.getColumnCount();
@@ -370,11 +360,7 @@ public class MemberATM_Impl implements MemberATM {
 				}
 			}
 		}
-		//account table의 모든 정보 가져오기
-		private String selectAccountAll() {
-			String sql = "Select * from account";
-			return sql;
-		}
+		
 		
 		//로그인한 아이디의 계좌정보 객체에 담아주기
 		private void setAccountInfo(String id) {
@@ -383,7 +369,7 @@ public class MemberATM_Impl implements MemberATM {
 			PreparedStatement pstmt = null;
 			ResultSet rs = null;
 			try {
-				pstmt = conn.prepareStatement(selectAccountInfo());
+				pstmt = conn.prepareStatement("select * from account where id = ?");
 				pstmt.setString(1, id);
 				rs = pstmt.executeQuery();
 				while (rs.next()) {
@@ -403,9 +389,117 @@ public class MemberATM_Impl implements MemberATM {
 			}
 			
 		}
-		private String selectAccountInfo() {
-			String sql = "select * from account where id = ?";
-			return sql;
+
+		//등급별 회원 조회 시 VIP 등급으로 업데이트하는 메소드(잔고기준 상위 0~10%)
+		@Override
+		public void updateGradeVip() {
+			conn = Jdbc.getInstance().getConnection();
+			PreparedStatement pstmt = null;
+			try {
+				pstmt = conn.prepareStatement("update member m, account a set m.grade = 'VIP' "
+						+ "where m.id = a.id "
+						+ "and m.id in (SELECT a.id FROM (SELECT a.id, "
+						+ "PERCENT_RANK() OVER (ORDER BY account.balance DESC) as rankpercent FROM account) b "
+						+ "WHERE b.rankpercent <= 0.1)");
+				int result = pstmt.executeUpdate();
+				String msg = result > -1 ?  "회원등급 자동업데이트완료" : "등급 변경 실패";
+				System.out.println(msg);
+				
+			} catch (SQLException e) {
+				e.printStackTrace();
+			} finally {
+				try {
+					if (pstmt != null)
+						pstmt.close();
+				} catch (SQLException e) {
+					e.printStackTrace();
+				}
+			}
 		}
+
+		//등급별 회원 조회 시 A 등급으로 업데이트하는 메소드(잔고기준 상위 10~20%)
+		@Override
+		public void updateGradeA() {
+			conn = Jdbc.getInstance().getConnection();
+			PreparedStatement pstmt = null;
+			try {
+				
+				pstmt = conn.prepareStatement("update member m, account a set m.grade = 'A' "
+						+ "where m.id = a.id "
+						+ "and m.id in (SELECT a.id FROM (SELECT a.id, "
+						+ "PERCENT_RANK() OVER (ORDER BY account.balance DESC) as rankpercent FROM account) b "
+						+ "WHERE b.rankpercent >0.1 and b.rankpercent <= 0.2  )");
+				int result = pstmt.executeUpdate();
+				String msg = result > -1 ?  "회원등급 자동업데이트완료" : "등급 변경 실패";
+				System.out.println(msg);
+				
+			} catch (SQLException e) {
+				e.printStackTrace();
+			} finally {
+				try {
+					if (pstmt != null)
+						pstmt.close();
+				} catch (SQLException e) {
+					e.printStackTrace();
+				}
+			}
+			
+		}
+
+		//등급별 회원 조회 시 B 등급으로 업데이트하는 메소드(잔고기준 상위 20~30%)
+		@Override
+		public void updateGradeB() {
+			conn = Jdbc.getInstance().getConnection();
+			PreparedStatement pstmt = null;
+			try {
+				pstmt = conn.prepareStatement("update member m, account a set m.grade = 'B' "
+						+ "where m.id = a.id "
+						+ "and m.id in (SELECT a.id FROM (SELECT a.id, "
+						+ "PERCENT_RANK() OVER (ORDER BY account.balance DESC) as rankpercent FROM account) b "
+						+ "WHERE b.rankpercent > 0.2 and b.rankpercent <= 0.3)");
+				int result = pstmt.executeUpdate();
+				String msg = result > -1 ?  "회원등급 자동업데이트완료" : "등급 변경 실패";
+				System.out.println(msg);
+				
+			} catch (SQLException e) {
+				e.printStackTrace();
+			} finally {
+				try {
+					if (pstmt != null)
+						pstmt.close();
+				} catch (SQLException e) {
+					e.printStackTrace();
+				}
+			}
+			
+		}
+		//등급별 회원 조회 시 C 등급으로 업데이트하는 메소드(잔고기준 상위 30%~100%)
+		@Override
+		public void updateGradeC() {
+			conn = Jdbc.getInstance().getConnection();
+			PreparedStatement pstmt = null;
+			try {
+				pstmt = conn.prepareStatement("update member m, account a set m.grade = 'C' "
+						+ "where m.id = a.id "
+						+ "and m.id in (SELECT a.id FROM (SELECT a.id, "
+						+ "PERCENT_RANK() OVER (ORDER BY account.balance DESC) as rankpercent FROM account) b "
+						+ "WHERE b.rankpercent > 0.3)");
+				int result = pstmt.executeUpdate();
+				String msg = result > -1 ?  "회원등급 자동업데이트완료" : "등급 변경 실패";
+				System.out.println(msg);
+				
+			} catch (SQLException e) {
+				e.printStackTrace();
+			} finally {
+				try {
+					if (pstmt != null)
+						pstmt.close();
+				} catch (SQLException e) {
+					e.printStackTrace();
+				}
+			}
+			
+		}
+		
 
 }

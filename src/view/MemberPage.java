@@ -12,7 +12,7 @@ import model.Member;
 
 public class MemberPage {
 	static Scanner sc = new Scanner(System.in);
-	static MemberATM_Impl m;// 회원가입 및 회원리스트 조회
+	static MemberATM_Impl m = new MemberATM_Impl();// 회원가입 및 회원리스트 조회
 	static AccountATM_Impl a = new AccountATM_Impl();
 	
 	public void memberPageView(Member member, List<Member> members,Account account,List<Account> accounts) {
@@ -23,7 +23,7 @@ public class MemberPage {
 		boolean run = true;
 		do {
 			System.out.println("-----------------------------------------------------------------------------------");
-			System.out.println("1.나의 계좌정보  | 2.예금 | 3.출금 | 4.송금 | 5.거래내역 조회 | 6.종료");
+			System.out.println("1.나의 계좌정보  | 2.예금 | 3.출금 | 4.송금 | 5.거래내역 조회 | 6.회원탈퇴 |7.로그아웃");
 			System.out.println("-----------------------------------------------------------------------------------");
 			System.out.print("원하시는 번호를 선택하세요");
 			int menuNum = sc.nextInt(); // 선택 번호
@@ -41,9 +41,13 @@ public class MemberPage {
 				a.send(id);
 				break;
 			case 5:// 입금
-				System.out.println("2선택");
+				System.out.println("5선택 아직구현안함");
+				break;
+			case 6:// 회원탈퇴
+				m.memberDrop(id);
+				run = false;
 				break;	
-			case 6: //처음으로 
+			case 7: //로그아웃/처음으로
 				run = false;
 				break;
 			default:

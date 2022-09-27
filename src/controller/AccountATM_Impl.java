@@ -28,7 +28,6 @@ public class AccountATM_Impl implements AccountATM{
 	//계좌생성
 	@Override
 	public void createAccount(String id, List<Account> accounts) {
-		System.out.println("createAccount Start....");
 		// 계좌번호 랜덤생성
 		Random ran = new Random();
 		int accountNo1 = 1002;
@@ -90,7 +89,6 @@ public class AccountATM_Impl implements AccountATM{
 			}else {
 				PreparedStatement pstmt = null;
 				try {
-					System.out.println("account Table Insert Start...");
 					pstmt = conn.prepareStatement("insert into account values(?,?,0,now())");
 					pstmt.setString(1, accountNo);
 					pstmt.setString(2, id);
@@ -265,12 +263,13 @@ public class AccountATM_Impl implements AccountATM{
 		
 	}
 
+	//출금
 	@Override
 	public void withdraw(String id) {
 		conn = Jdbc.getInstance().getConnection();
 		PreparedStatement pstmt = null;
-		System.out.println(account.getBalance());
 		setAccountInfo(id);
+		System.out.println(account.getBalance());
 		try {
 			System.out.print("출금하실 금액을 입력하세요.");
 			long money = sc.nextLong();
@@ -283,6 +282,7 @@ public class AccountATM_Impl implements AccountATM{
 				setAccountInfo(id);
 				String msg = result > -1 ? money + "원 출금이 완료되었습니다. 예금 후 잔액은 "+ account.getBalance()+ "원 입니다." : "예금 실패";
 				System.out.println(msg);
+				
 			}else {// 출금액이 예금액보다 클때
 				System.out.println("잔액이 부족합니다. 잔액을 확인 후 다시 시도해주세요.");
 			}
@@ -301,7 +301,7 @@ public class AccountATM_Impl implements AccountATM{
 	}
 
 
-
+	//송금
 	@SuppressWarnings({ "resource", "unused" })
 	public void send(String id) {
 		conn = Jdbc.getInstance().getConnection();
@@ -329,6 +329,7 @@ public class AccountATM_Impl implements AccountATM{
 					int result2 = pstmt.executeUpdate();
 					String msg = result > -1 ? otherid+ "님에게 "+ money + "원 이체 완료되었습니다. 이체 후 잔액은 "+ account.getBalance()+ "원 입니다." : "송금 실패";
 					System.out.println(msg);
+					
 				}else {// 출금액이 예금액보다 클때
 					System.out.println("잔액이 부족합니다. 잔액을 확인 후 다시 시도해주세요.");
 				}
@@ -346,18 +347,12 @@ public class AccountATM_Impl implements AccountATM{
 			} catch (SQLException e) {
 				e.printStackTrace();
 			}
-		}
-			
-			
-			
-			
-			
-			
-			
+		}	
 	}
+
+
 	
 	
-	//송금
 	//계좌별 거래내역 조회
 
 }
