@@ -7,7 +7,7 @@ public interface MemberATM {
 	
 	public void login();// 로그인
 	
-	public void saveMemberAll(); //DB에서 회원정보 가져와서 ArrayList에 담기
+	//public void saveMemberAll(); //DB에서 회원정보 가져와서 ArrayList에 담기
 	
 	public Member existMember(String id); //해당 id 에 대한 회원정보 객체 저장
 

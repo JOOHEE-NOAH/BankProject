@@ -23,7 +23,6 @@ public class CreateTable {
          if (result < 0 ) {
             System.out.println("실행실패");
          }else {
-            System.out.println("member table 생성성공");
          }
       } catch (SQLException e) {
          e.printStackTrace();
@@ -49,12 +48,11 @@ public class CreateTable {
 							           	    + " BALANCE int unsigned Default 0,"
 							           	    + " OADATE DATETIME DEFAULT now(),"
 							           	    + " FOREIGN KEY(ID)"
-							           	    + " REFERENCES MEMBER(ID) ON UPDATE CASCADE) "
+							           	    + " REFERENCES MEMBER(ID) ON DELETE CASCADE ON UPDATE CASCADE) "
 							         		);
          if (result < 0 ) {
             System.out.println("실행실패");
          }else {
-            System.out.println("account table 생성성공");
          }
       } catch (SQLException e) {
          e.printStackTrace();

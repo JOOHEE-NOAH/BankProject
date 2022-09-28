@@ -1,24 +1,13 @@
 package controller;
 
-import java.io.BufferedReader;
-import java.io.File;
-import java.io.FileReader;
-import java.io.FileWriter;
-import java.io.IOException;
-import java.io.PrintWriter;
 import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
-import java.sql.ResultSetMetaData;
 import java.sql.SQLException;
 import java.time.LocalDate;
-import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
-import java.util.Iterator;
 import java.util.List;
-import java.util.Random;
 import java.util.Scanner;
-import java.util.StringTokenizer;
 
 import Dao.Jdbc;
 import model.Account;
@@ -31,32 +20,30 @@ public class MemberATM_Impl implements MemberATM {
 	LocalDate nowdate = LocalDate.now();
 	List<Member> members = new ArrayList<Member>();
 	List<Account> accounts = new ArrayList<Account>();
-	AccountATM_Impl a = new AccountATM_Impl();
 	Account account;
 	Member member;
-	Connection conn;
+	Connection conn = Jdbc.getInstance().getConnection();
 
-	// 회원가입
+	// 1.회원가입
 	public void memberJoin() {
-		member = null;
-		conn = Jdbc.getInstance().getConnection();
+		Connection conn = Jdbc.getInstance().getConnection();
 		String grade = "C";// 회원가입시 기본 등급(C) 설정
 		System.out.print("가입하실 아이디를 입력하세요 >>");
 		String id = sc.next();
 		boolean run = true;
-
+		AccountATM_Impl a = new AccountATM_Impl();
+		
 		// 아이디 중복검사
-		Member member = existMember(id);
+		Member member = existMember(id);//중복검사 DB에 없는 아이디 일것.
 		if (member != null) { // 아이디 중복됨
 			System.out.println("이미 존재하는 ID입니다.");
-			System.out.println("중복되는 아이디 이름" + member.getId());
 		} else {// 아이디 중복검사 통과 + 비밀번호 일치 시 회원가입 완료
-			System.out.print("이름를 입력하세요 >>");
+			System.out.print("이름를 입력하세요 : ");
 			String name = sc.next();
 			do {
-				System.out.print("비밀번호를 입력하세요 >>");
+				System.out.print("비밀번호를 입력하세요 : ");
 				String pw = sc.next();
-				System.out.print("비밀번호를 한번 더 입력하세요 >>");
+				System.out.print("비밀번호를 한번 더 입력하세요 : ");
 				String pw2 = sc.next();
 				if (pw.equals(pw2)) {
 
@@ -79,6 +66,7 @@ public class MemberATM_Impl implements MemberATM {
 						try {
 							if (pstmt != null)
 								pstmt.close();
+							
 						} catch (SQLException e) {
 							e.printStackTrace();
 						}
@@ -111,36 +99,15 @@ public class MemberATM_Impl implements MemberATM {
 			} while (run);
 
 		}
+
 	}
-
-//	// 회원가입시 회원정보를 파일에 차곡차곡 저장
-//	private void fileInput(Member member) {
-//		System.out.println("fileInputstart.....");// 확인
-//		try {// 파일에 중첩해서 회원정보 저장
-//			PrintWriter pw = new PrintWriter(new FileWriter(new File("BankMembers.text"), true));
-//			StringBuilder sb = new StringBuilder();
-//			sb.append(member.getId());
-//			sb.append("#");
-//			sb.append(member.getName());
-//			sb.append("#");
-//			sb.append(member.getPw());
-//			sb.append("#");
-////			sb.append(member.getBalance());
-////			sb.append("#");
-////			sb.append(member.getAccountNo());
-//			pw.println(sb.toString());
-//			pw.close();
-//
-//		} catch (Exception e) {
-//			e.printStackTrace();
-//		}
-//
-//	}
-
-	@Override // 회원탈퇴
+	
+	
+	// 회원탈퇴
+	@Override 
 	public void memberDrop(String id) {
+		Connection conn = Jdbc.getInstance().getConnection();
 		System.out.println("회원탈퇴를 시작합니다.");
-		conn = Jdbc.getInstance().getConnection();
 		PreparedStatement pstmt = null;
 		System.out.println("비밀번호를 입력하세요 : ");
 		String pw = sc.next();
@@ -151,6 +118,8 @@ public class MemberATM_Impl implements MemberATM {
 			int result = pstmt.executeUpdate();
 			String msg = result > -1 ? "성공적으로 회원탈퇴 되었습니다." : "실패";
 			System.out.println(msg);
+			members = new ArrayList<Member>();
+			member = null;
 		} catch (SQLException e) {
 			e.printStackTrace();
 		} finally {
@@ -166,36 +135,36 @@ public class MemberATM_Impl implements MemberATM {
 	
 	// 로그인
 	public void login() {
+		member = null;
+		if (member!=null) {
+			System.out.println(member.toString());
+		}
 		System.out.println("id와 pw를 입력하세요");
 		System.out.print("id : ");
 		String id = sc.next();
 		System.out.print("pw : ");
 		String pw = sc.next();
 		// 로그인 검사
-		Member member = loginCheck(id, pw);
+		member = loginCheck(id, pw);
 		if (member != null) {
 			if (id.equals("admin")) {
 				AdminPage adminPage = new AdminPage();
 				adminPage.adminPageView();
 			} else {
 				MemberPage memberPage = new MemberPage();
-//				setMemberInfo(id);
-//				setAccountInfo(id);
-//				a.setAccountInfo(id);
-				memberPage.memberPageView(id);// myPage로 넘어가기
+				String name = member.getName();
+				memberPage.memberPageView(id,name);// myPage로 넘어가기
 			}
 		} else {
 			System.out.println("아이디 또는 패스워드 오류입니다.");
-		}
-		;
+		};
 
 	}
 
 	// 로그인 아이디/비번 체크
 	private Member loginCheck(String id, String pw) {
-		System.out.println("로그인 검사 시작");
-		System.out.println("아이디=" + id);
-		conn = Jdbc.getInstance().getConnection();
+		Connection conn = Jdbc.getInstance().getConnection();
+		System.out.println("dj"+id+pw);
 		PreparedStatement pstmt = null;
 		ResultSet rs = null;
 		try {
@@ -206,9 +175,9 @@ public class MemberATM_Impl implements MemberATM {
 			while (rs.next()) {
 				member = new Member(rs.getString(1), rs.getString(2), rs.getString(3), rs.getString(4),
 						rs.getString(5));
+				System.out.println("잘드갔니"+member.getId());
 			}
 		} catch (Exception e) {
-			e.printStackTrace();
 		} finally {
 			try {
 				if (rs != null)
@@ -224,10 +193,9 @@ public class MemberATM_Impl implements MemberATM {
 
 	// 회원 존재확인(중복확인) 및 입력한 id정보 Member객체 담기
 	public Member existMember(String id) {
-		conn = Jdbc.getInstance().getConnection();
+		Connection conn = Jdbc.getInstance().getConnection();
 		PreparedStatement pstmt = null;
 		ResultSet rs = null;
-		System.out.println("가입하려는 id="+id);
 		try {
 			pstmt = conn.prepareStatement("select * from member where id = ?");
 			pstmt.setString(1, id);
@@ -252,64 +220,10 @@ public class MemberATM_Impl implements MemberATM {
 
 	}
 
-	// Member정보 List 저장
-	@Override
-	public void saveMemberAll() {
-		conn = Jdbc.getInstance().getConnection();
-		PreparedStatement pstmt = null;
-		ResultSet rs = null;
-		try {
-			pstmt = conn.prepareStatement("Select * from member");
-			rs = pstmt.executeQuery();
-			while (rs.next()) {
-				member = new Member(rs.getString(1), rs.getString(2), rs.getString(3), rs.getString(4),
-						rs.getString(5));
-				members.add(member);
-			}
-//			for (int i = 0; i < members.size(); i++) {
-//				System.out.println(members.get(i).getId());
-//			}
-
-		} catch (Exception e) {
-			e.printStackTrace();
-		} finally {
-			try {
-				if (rs != null)
-					rs.close();
-				if (pstmt != null)
-					pstmt.close();
-			} catch (Exception e) {
-				e.printStackTrace();
-			}
-		}
-	}
-	//Account정보 List 저장
-	public void saveAccountAll() {
-		conn = Jdbc.getInstance().getConnection();
-		PreparedStatement pstmt = null;
-		ResultSet rs = null;
-		try {
-			pstmt = conn.prepareStatement("Select * from account");
-			rs = pstmt.executeQuery();
-			while (rs.next()) {
-				account = new Account(rs.getString(1), rs.getString(2), rs.getLong(3), rs.getString(4));
-				accounts.add(account);
-			}
-//			for (int i = 0; i < accounts.size(); i++) {
-//				System.out.println(accounts.get(i).getId());
-//			}
-		} catch (Exception e) {
-			e.printStackTrace();
-		}finally {
-			try {
-				if (rs != null) rs.close();
-				if (pstmt != null) pstmt.close();
-			} catch (Exception e) {
-				e.printStackTrace();
-			}
-		}
-	}
-	// 전체 사용자 정보 조회
+		
+	/* -----------관리자 페이지 기능 구현---------------------------------- */
+	
+	/* 1.전체 사용자 정보 조회 */
 	public void memberInfoAllforAdmin() {
 		//전체 조회 전 등급 업데이트
 		updateGradeVip();
@@ -336,11 +250,11 @@ public class MemberATM_Impl implements MemberATM {
 			if (members.size() != 0) {
 
 				System.out.println("-----------------------------------------------------------------------------------");
-				System.out.println("가입일\t\t아이디\t\t이름\t\t계좌번호\t\t등급\t\t잔액\t");
+				System.out.println("가입일\t\t아이디\t\t이름\t\t계좌번호\t\t\t등급\t\t잔액\t");
 				System.out.println("-----------------------------------------------------------------------------------");
 				for (int i = 0; i < members.size(); i++) {
-					System.out.println(members.get(i).getRdate() + "\t" + members.get(i).getId() + "\t\t"
-							+ members.get(i).getName() + "\t\t" + members.get(i).getAccountNo() + "\t"
+					System.out.println(members.get(i).getRdate().substring(0,10) + "\t" + members.get(i).getId() + "\t\t"
+							+ members.get(i).getName() + "\t\t" + members.get(i).getAccountNo().substring(0,4)+"-"+ members.get(i).getAccountNo().substring(4,7)+"-"+ members.get(i).getAccountNo().substring(7,members.get(i).getAccountNo().length()) + "\t\t"
 							+ members.get(i).getGrade() + "\t\t" + members.get(i).getBalance() + "\t");
 				}
 			}
@@ -360,8 +274,8 @@ public class MemberATM_Impl implements MemberATM {
 
 	}
 	
-	//등급별 회원 수 조회
-	public void gradeCount() {
+	/* 2.등급별 회원 수 조회 */
+	public void gradeCountView() {
 		System.out.println("등급별 회원수를 조회합니다.");
 		boolean run = true;
 		String grade = null;
@@ -397,16 +311,17 @@ public class MemberATM_Impl implements MemberATM {
 				break;
 			}
 			if (grade != null) {
-				selectGradeCount(grade);
+				int gradeCount = selectGradeCount(grade);
+				System.out.println("--------------"+grade+"등급 회원수------------------");
+				System.out.println(grade + " : " + gradeCount +"명");
 			}
 			
 		} while (run);
 
 	}
 	
-	//등급별 회원 수 조회
-	public void selectGradeCount(String grade) {
-		System.out.println("넘어온 grade 값"+ grade);
+	//등급별 회원 수 구하기
+	public int selectGradeCount(String grade) {
 		conn = Jdbc.getInstance().getConnection();
 		PreparedStatement pstmt = null;
 		ResultSet rs = null;
@@ -431,14 +346,12 @@ public class MemberATM_Impl implements MemberATM {
 				e.printStackTrace();
 			}
 		}
-		System.out.println("--------------"+grade+"등급 회원수------------------");
-		System.out.println(grade + " : " + gradeCount +"명");
+		return gradeCount;
 	}
 
 	// 등급별 회원 조회 시 VIP 등급으로 업데이트하는 메소드(잔고기준 상위 0~10%)
 	@Override
 	public void updateGradeVip() {
-		System.out.println("Vip등급 먹이기 시작");
 		conn = Jdbc.getInstance().getConnection();
 		PreparedStatement pstmt = null;
 		try {
@@ -448,8 +361,8 @@ public class MemberATM_Impl implements MemberATM {
 					+ "FROM (SELECT account.id, PERCENT_RANK() OVER (ORDER BY account.balance DESC) as per_rank FROM account) a\r\n"
 					+ "WHERE a.per_rank <= 0.1)");
 			int result = pstmt.executeUpdate();
-			String msg = result > -1 ? "회원등급 자동업데이트완료" : "등급 변경 실패";
-			System.out.println(msg);
+//			String msg = result > -1 ? "회원등급 자동업데이트완료" : "등급 변경 실패";
+//			System.out.println(msg);
 
 		} catch (SQLException e) {
 			e.printStackTrace();
@@ -466,7 +379,6 @@ public class MemberATM_Impl implements MemberATM {
 	// 등급별 회원 조회 시 A 등급으로 업데이트하는 메소드(잔고기준 상위 10~20%)
 	@Override
 	public void updateGradeA() {
-		System.out.println("A등급 먹이기 시작");
 		conn = Jdbc.getInstance().getConnection();
 		PreparedStatement pstmt = null;
 		try {
@@ -477,8 +389,8 @@ public class MemberATM_Impl implements MemberATM {
 					+ "FROM (SELECT account.id, PERCENT_RANK() OVER (ORDER BY account.balance DESC) as per_rank FROM account) a\r\n"
 					+ "WHERE a.per_rank > 0.1 and a.per_rank <=0.3)");
 			int result = pstmt.executeUpdate();
-			String msg = result > -1 ? "회원등급 자동업데이트완료" : "등급 변경 실패";
-			System.out.println(msg);
+//			String msg = result > -1 ? "회원등급 자동업데이트완료" : "등급 변경 실패";
+//			System.out.println(msg);
 
 		} catch (SQLException e) {
 			e.printStackTrace();
@@ -496,7 +408,6 @@ public class MemberATM_Impl implements MemberATM {
 	// 등급별 회원 조회 시 B 등급으로 업데이트하는 메소드(잔고기준 상위 20~30%)
 	@Override
 	public void updateGradeB() {
-		System.out.println("C등급 먹이기 시작");
 		conn = Jdbc.getInstance().getConnection();
 		PreparedStatement pstmt = null;
 		try {
@@ -506,8 +417,8 @@ public class MemberATM_Impl implements MemberATM {
 					+ "FROM (SELECT account.id, PERCENT_RANK() OVER (ORDER BY account.balance DESC) as per_rank FROM account) a\r\n"
 					+ "WHERE a.per_rank > 0.3 and a.per_rank <=0.5)");
 			int result = pstmt.executeUpdate();
-			String msg = result > -1 ? "회원등급 자동업데이트완료" : "등급 변경 실패";
-			System.out.println(msg);
+//			String msg = result > -1 ? "회원등급 자동업데이트완료" : "등급 변경 실패";
+//			System.out.println(msg);
 
 		} catch (SQLException e) {
 			e.printStackTrace();
@@ -525,7 +436,6 @@ public class MemberATM_Impl implements MemberATM {
 	// 등급별 회원 조회 시 C 등급으로 업데이트하는 메소드(잔고기준 상위 30%~100%)
 	@Override
 	public void updateGradeC() {
-		System.out.println("C등급 먹이기 시작");
 		conn = Jdbc.getInstance().getConnection();
 		PreparedStatement pstmt = null;
 		try {
@@ -535,8 +445,8 @@ public class MemberATM_Impl implements MemberATM {
 					+ "FROM (SELECT account.id, PERCENT_RANK() OVER (ORDER BY account.balance DESC) as per_rank FROM account) a\r\n"
 					+ "WHERE a.per_rank > 0.5)");
 			int result = pstmt.executeUpdate();
-			String msg = result > -1 ? "회원등급 자동업데이트완료" : "등급 변경 실패";
-			System.out.println(msg);
+//			String msg = result > -1 ? "회원등급 자동업데이트완료" : "등급 변경 실패";
+//			System.out.println(msg);
 
 		} catch (SQLException e) {
 			e.printStackTrace();
@@ -550,28 +460,74 @@ public class MemberATM_Impl implements MemberATM {
 		}
 
 	}
-	//
-//		// 파일에 저장되어 있는 정보 꺼내 List에 저장
-//		public void fileOutput() {
-//			System.out.println("fileOutputStart....");
-//			try {
-//				BufferedReader br = new BufferedReader(new FileReader(new File("BankMembers.text")));
-//				while (br.ready()) {
-//					StringTokenizer st = new StringTokenizer(br.readLine(), "#");// #을 기준으로 분리
-//					String id = st.nextToken();
-//					String name = st.nextToken();
-//					String pw = st.nextToken();
-//					String grade = st.nextToken();
-//					String rdate = st.nextToken();
-	//
-//					members.add(new MemberDTO(id, name, pw, grade, rdate));
-//				}
-//			} catch (IOException e) {
-//				// TODO Auto-generated catch block
-//				e.printStackTrace();
-//			}
-	//
-//		}
+	
+	
+	/* 3.회원이름 검색하여 회원정보 조회 */
+	public void searchMember() {
+		// 전체 조회 전 등급 업데이트
+		updateGradeVip();
+		updateGradeA();
+		updateGradeB();
+		updateGradeC();
+		List<Member> members = new ArrayList<Member>();
+		conn = Jdbc.getInstance().getConnection();
+		PreparedStatement pstmt = null;
+		ResultSet rs = null;
+		System.out.print("회원 이름을 검색하세요 : ");
+		String name = null; 
+		name = sc.next();
+		try {
+			pstmt = conn.prepareStatement("select  rdate, m.id, name, accountno, balance, grade\r\n"
+					+ "from member m\r\n"
+					+ "inner join account a\r\n"
+					+ "on m.id = a.id \r\n"
+					+ "and m.id in (SELECT id FROM member WHERE name LIKE ?)\r\n"
+					+ "and m.id != 'admin'");
+			pstmt.setString(1, "%" + name +"%");
+			rs = pstmt.executeQuery();
+			while (rs.next()) {
+				Member member = new Member(rs.getString(2), rs.getString(3), rs.getString(6), rs.getString(1), rs.getString(4),
+						rs.getLong(5));
+				members.add(member);
+
+			}
+			if (members.size() != 0) {
+
+				System.out
+						.println("--------------------\""+name+"\"에 대한 검색 결과입니다.---------------------------------------------------------------");
+				System.out.println("가입일\t\t아이디\t\t이름\t\t계좌번호\t\t\t등급\t\t잔액\t");
+				System.out
+						.println("----------------------------------------------------------------------------------------------------------------");
+				for (int i = 0; i < members.size(); i++) {
+					System.out.println(members.get(i).getRdate().substring(0, 10) + "\t" + members.get(i).getId()
+							+ "\t\t" + members.get(i).getName() + "\t\t" + members.get(i).getAccountNo().substring(0, 4)
+							+ "-" + members.get(i).getAccountNo().substring(4, 7) + "-"
+							+ members.get(i).getAccountNo().substring(7, members.get(i).getAccountNo().length())
+							+ "\t\t" + members.get(i).getGrade() + "\t\t" + members.get(i).getBalance() + "\t");
+				}
+			}else {
+				System.out.println("검색결과가 없습니다.");
+			}
+
+		} catch (Exception e) {
+			e.printStackTrace();
+		} finally {
+			try {
+				if (rs != null)
+					rs.close();
+				if (pstmt != null)
+					pstmt.close();
+			} catch (Exception e) {
+				e.printStackTrace();
+			}
+		}
+
+	}
+
+
+	
+
+	
 
 
 

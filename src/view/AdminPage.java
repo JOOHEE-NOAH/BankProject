@@ -1,12 +1,9 @@
 package view;
 
-import java.util.List;
 import java.util.Scanner;
 
 import controller.AccountATM_Impl;
 import controller.MemberATM_Impl;
-import model.Account;
-import model.Member;
 
 
 public class AdminPage {
@@ -29,16 +26,16 @@ public class AdminPage {
 				m.memberInfoAllforAdmin();
 				break;
 			case 2:// 등급별 회원 수 조회
-				m.gradeCount();
+				m.gradeCountView();
 				break;
 			case 3:// 회원 검색
-//				a.withdraw(id);
+				m.searchMember();
 				break;
 			case 4: //로그아웃/처음으로
 				run = false;
 				break;
 			default:
-				System.out.println("Wrong Answer");
+				System.out.println("잘못 선택하셨습니다. 올바른 번호를 입력해주세요.");
 			}
 			System.out.println();
 

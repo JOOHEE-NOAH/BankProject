@@ -13,7 +13,7 @@ public class Member {
 	private String accountNo;
 	private long balance;
 	
-	//회원전체정보 조회
+	//회원전체정보 조회용
 	public Member(String id, String name, String grade, String rdate, String accountNo, long balance) {
 		super();
 		this.id = id;
@@ -23,13 +23,13 @@ public class Member {
 		this.accountNo = accountNo;
 		this.balance = balance;
 	}
-	public Member(String id, String name, String pw, String grade2, String rdate2) {
+	public Member(String id, String name, String pw, String grade, String rdate) {
 		super();
 		this.id = id;
 		this.name = name;
 		this.pw = pw;
-		this.grade = grade2;
-		this.rdate = rdate2;
+		this.grade = grade;
+		this.rdate = rdate;
 	}
 	public String getId() {
 		return id;
