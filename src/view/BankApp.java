@@ -14,16 +14,25 @@ public class BankApp  {
 		CreateTable ct = new CreateTable();
 		ct.createMemberTable();
 		ct.createAccountTable();
-		
 		boolean run = true;
-		
+		System.out.println("A____A				    	   		ᘏ_____ᘏ\r\n"
+				+ "|　・ㅅ・ |						        |　・ㅅ・ |\r\n"
+				+ "|っ　 ｃ|						        |っ　 ｃ|\r\n"
+				+ "|　　 　|						        |　　 　|");
+		System.out.println("███████╗ ██████╗  ██████╗     ██████╗  █████╗ ███╗   ██╗██╗  ██╗\r\n"
+				+ "╚══███╔╝██╔═══██╗██╔═══██╗    ██╔══██╗██╔══██╗████╗  ██║██║ ██╔╝\r\n"
+				+ "  ███╔╝ ██║   ██║██║   ██║    ██████╔╝███████║██╔██╗ ██║█████╔╝ \r\n"
+				+ " ███╔╝  ██║   ██║██║   ██║    ██╔══██╗██╔══██║██║╚██╗██║██╔═██╗ \r\n"
+				+ "███████╗╚██████╔╝╚██████╔╝    ██████╔╝██║  ██║██║ ╚████║██║  ██╗\r\n"
+				+ "╚══════╝ ╚═════╝  ╚═════╝     ╚═════╝ ╚═╝  ╚═╝╚═╝  ╚═══╝╚═╝  ╚═╝\r\n"
+				+ "                                                                ");
 		do {
-			//m.fileOutput();
-			System.out.println("-----------------------------------------------------------------------------------");
+			System.out.println("✿​━━∞━━∞━━∞━━∞━━∞━━∞━━∞━━∞━━✿ MAIN MENU ✿​━━∞━━∞━━∞━━∞━━∞━━∞━━∞━━∞━━∞✿");
 			System.out.println("1.회원가입  | 2.로그인  | 3.종료");
-			System.out.println("-----------------------------------------------------------------------------------");
+			System.out.println("-----------------------------------------------------------");
 			System.out.print("원하시는 번호를 선택하세요");
-			int menuNum = sc.nextInt(); 
+			int menuNum = sc.nextInt();
+			System.out.println("");
 			switch (menuNum) {
 			case 1:// 회원가입
 				m.memberJoin();
@@ -36,7 +45,14 @@ public class BankApp  {
 				run = false;
 				break;
 			default:
-				System.out.println("잘못 선택하셨습니다. 올바른 번호를 입력해주세요.");
+				System.out.println("");
+				System.out.println("|￣￣￣￣￣￣￣|\r\n"
+						+ "|잘못된번호에요|\r\n"
+						+ "|＿＿＿＿＿＿＿|\r\n"
+						+ "(\\_/)||\r\n"
+						+ "(•ㅅ•)||\r\n"
+						+ "/....づ\r\n"
+						+ "");
 			}
 			System.out.println();
 

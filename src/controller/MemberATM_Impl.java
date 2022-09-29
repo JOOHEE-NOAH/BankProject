@@ -56,8 +56,9 @@ public class MemberATM_Impl implements MemberATM {
 						pstmt.setString(3, pw);
 						pstmt.setString(4, grade);
 						int result = pstmt.executeUpdate();
-						String msg = result > -1 ? id + "님 회원가입이 완료되었습니다." : "회원정보 추가실패";
-						System.out.println(msg);
+						String msg = result > -1 ? "\n✿​━━∞━━∞━━∞━━∞━━∞━━∞━━✿​━━∞━━∞━━∞━━∞━━∞━━∞━━✿\r\n"
+								+" "+id +"님 회원가입이 완료되었습니다.ʚ(*´꒳`*)ɞ ": "회원정보 추가실패";
+						System.out.print(msg);
 						//회원가입과 동시에 자동계좌생성
 						a.createAccount(id);
 					} catch (SQLException e) {
@@ -107,7 +108,8 @@ public class MemberATM_Impl implements MemberATM {
 	@Override 
 	public void memberDrop(String id) {
 		Connection conn = Jdbc.getInstance().getConnection();
-		System.out.println("회원탈퇴를 시작합니다.");
+		System.out.println("");
+		System.out.println("(╯°□°)╯정말 탈퇴하시겠어요...?탈퇴하시려면 비밀번호를 입력해주세요.");
 		PreparedStatement pstmt = null;
 		System.out.println("비밀번호를 입력하세요 : ");
 		String pw = sc.next();
@@ -116,7 +118,7 @@ public class MemberATM_Impl implements MemberATM {
 			pstmt.setString(1, id); // 첫번째 물음표는 id로 설정
 			pstmt.setString(2, pw);
 			int result = pstmt.executeUpdate();
-			String msg = result > -1 ? "성공적으로 회원탈퇴 되었습니다." : "실패";
+			String msg = result > 0 ? "성공적으로 회원탈퇴 되었습니다." : "잘못된 비밀번호 입니다.";
 			System.out.println(msg);
 			members = new ArrayList<Member>();
 			member = null;
@@ -144,6 +146,7 @@ public class MemberATM_Impl implements MemberATM {
 		String id = sc.next();
 		System.out.print("pw : ");
 		String pw = sc.next();
+		System.out.println("");
 		// 로그인 검사
 		member = loginCheck(id, pw);
 		if (member != null) {
@@ -164,7 +167,6 @@ public class MemberATM_Impl implements MemberATM {
 	// 로그인 아이디/비번 체크
 	private Member loginCheck(String id, String pw) {
 		Connection conn = Jdbc.getInstance().getConnection();
-		System.out.println("dj"+id+pw);
 		PreparedStatement pstmt = null;
 		ResultSet rs = null;
 		try {
@@ -175,7 +177,6 @@ public class MemberATM_Impl implements MemberATM {
 			while (rs.next()) {
 				member = new Member(rs.getString(1), rs.getString(2), rs.getString(3), rs.getString(4),
 						rs.getString(5));
-				System.out.println("잘드갔니"+member.getId());
 			}
 		} catch (Exception e) {
 		} finally {
